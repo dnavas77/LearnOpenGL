@@ -125,19 +125,19 @@ int main(void)
 		1, 2, 3		// second triangle
 	};
 	unsigned int VBO, VAO, EBO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
 
 	// Bind the Vertex Array Object first, then bind and set vertex buffer(s)
 	// and the configure vertex attribute(s).
+	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
+	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	// Element Buffer Objects
 	// ----------------------
+	glGenBuffers(1, &EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
