@@ -4,7 +4,12 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <cassert>
+
+// macros
+#define ASSERT(x) if (!(x)) __debugbreak();
+#define GLCall(x) GLClearError();\
+	x;\
+	ASSERT(GLLogCall(#x, __FILE__, __LINE__))
 
 // structs
 struct ShaderProgramSource
@@ -18,6 +23,8 @@ void processInput(GLFWwindow *window);
 static int CreateShaderProgram(const std::string& vertexShader, const std::string& fragmentShader);
 static unsigned int CompileShader(unsigned int type, const std::string& source);
 static ShaderProgramSource ParseShader(const std::string& filepath);
+static void GLClearError();
+static bool GLLogCall(const char* function, const char* file, int line);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -77,42 +84,26 @@ int main(void)
 	};
 
 	unsigned int VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
+	GLCall(glGenVertexArrays(1, &VAO));
+	GLCall(glBindVertexArray(VAO));
 
 	unsigned int VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	GLCall(glGenBuffers(1, &VBO));
+	GLCall(glBindBuffer(GL_ARRAY_BUFFER, VBO));
+	GLCall(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW));
 
 	unsigned int EBO;
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	GLCall(glGenBuffers(1, &EBO));
+	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO));
+	GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW));
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	// Note that this is allowed, the call to glVertexAttribPointer registered
-	// VBO as the vertex attribute's bound vertex buffer object so afterwards
-	// we can safely unbind
-	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify
-	// this VAO, but this rarely happens. Modifying other VAOs requires a call to
-	// glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when
-	// it's not directly necessary.
-	//glBindVertexArray(0);
+	GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0));
+	GLCall(glEnableVertexAttribArray(0));
 
 	// Uncomment this call to draw in wireframe polygons.
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	glUseProgram(shader);
-
-	// Set fragment shader color via uniform
-	int location = glGetUniformLocation(shader, "u_Color");
-	assert(location != -1);
-	glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f);
+	GLCall(glUseProgram(shader));
 
 	// Render loop
 	while (!glfwWindowShouldClose(window)) {
@@ -120,10 +111,10 @@ int main(void)
 		processInput(window);
 
 		/* Render here */
-		glClear(GL_COLOR_BUFFER_BIT);
+		GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
 		// Draw calls
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+		GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 
 		/* Swap front and back buffers and poll for IO events (keys, mouse, ect) */
 		glfwSwapBuffers(window);
@@ -131,9 +122,9 @@ int main(void)
 	}
 
 	// Optional: deallocate all resources
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
-	glDeleteProgram(shader);
+	GLCall(glDeleteVertexArrays(1, &VAO));
+	GLCall(glDeleteBuffers(1, &VBO));
+	GLCall(glDeleteProgram(shader));
 
 	// Terminate GLFW (clears all GLFW allocated resources)
 	glfwTerminate();
@@ -150,7 +141,7 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
 	// make sure the viewport matches the new window dimensions; note that width and
 	// height will be significantly larger than specified on a retina displays.
-	glViewport(0, 0, width, height);
+	GLCall(glViewport(0, 0, width, height));
 }
 
 // Process all input: query GLFW whether relevant keys are pressed/released
@@ -168,9 +159,9 @@ static int CreateShaderProgram(const std::string& vertexShader, const std::strin
 	unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
 	unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
 
-	glAttachShader(program, vs);
-	glAttachShader(program, fs);
-	glLinkProgram(program);
+	GLCall(glAttachShader(program, vs));
+	GLCall(glAttachShader(program, fs));
+	GLCall(glLinkProgram(program));
 
 	// Error handling for linking program (glLinkProgram)
 	int  success;
@@ -180,11 +171,13 @@ static int CreateShaderProgram(const std::string& vertexShader, const std::strin
 	{
 		glGetProgramInfoLog(program, 512, NULL, infoLog);
 		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+		GLCall(glDeleteProgram(program));
+		return 0;
 	}
-	glValidateProgram(program);
 
-	glDeleteShader(vs);
-	glDeleteShader(fs);
+	GLCall(glValidateProgram(program));
+	GLCall(glDeleteShader(vs));
+	GLCall(glDeleteShader(fs));
 
 	return program;
 }
@@ -193,18 +186,18 @@ static unsigned int CompileShader(unsigned int type, const std::string& source)
 {
 	unsigned int id = glCreateShader(type);
 	const char* src = source.c_str();
-	glShaderSource(id, 1, &src, nullptr);
-	glCompileShader(id);
+	GLCall(glShaderSource(id, 1, &src, nullptr));
+	GLCall(glCompileShader(id));
 
 	// Error handling
 	int  success;
 	char infoLog[512];
-	glGetShaderiv(id, GL_COMPILE_STATUS, &success);
+	GLCall(glGetShaderiv(id, GL_COMPILE_STATUS, &success));
 	if (!success)
 	{
-		glGetShaderInfoLog(id, 512, NULL, infoLog);
+		GLCall(glGetShaderInfoLog(id, 512, NULL, infoLog));
 		std::cout << "ERROR::SHADER::" << type << "::COMPILATION_FAILED\n" << infoLog << std::endl;
-		glDeleteShader(id);
+		GLCall(glDeleteShader(id));
 		return 0;
 	}
 
@@ -224,13 +217,13 @@ static ShaderProgramSource ParseShader(const std::string& filepath)
 	ShaderType type = ShaderType::NONE;
 	while (getline(stream, line))
 	{
-		if (line.find("#shader") != std::string::npos)
+		if (line.find("#SHADER") != std::string::npos)
 		{
-			if (line.find("vertex") != std::string::npos)
+			if (line.find("VERTEX") != std::string::npos)
 			{
 				type = ShaderType::VERTEX;
 			}
-			else if (line.find("fragment") != std::string::npos)
+			else if (line.find("FRAGMENT") != std::string::npos)
 			{
 				type = ShaderType::FRAGMENT;
 			}
@@ -241,4 +234,20 @@ static ShaderProgramSource ParseShader(const std::string& filepath)
 		}
 	}
 	return { ss[0].str(), ss[1].str() };
+}
+
+static void GLClearError()
+{
+	while (glGetError() != GL_NO_ERROR);
+}
+
+static bool GLLogCall(const char* function, const char* file, int line)
+{
+	while (GLenum error = glGetError())
+	{
+		std::cout << "[OpenGL Error] (" << error << "): " << function <<
+			" " << file << ": " << line << std::endl;
+		return false;
+	}
+	return true;
 }
