@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <cassert>
 
 // structs
 struct ShaderProgramSource
@@ -14,7 +15,7 @@ struct ShaderProgramSource
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
-static int CreateShader(const std::string& vertexShader, const std::string& fragmentShader);
+static int CreateShaderProgram(const std::string& vertexShader, const std::string& fragmentShader);
 static unsigned int CompileShader(unsigned int type, const std::string& source);
 static ShaderProgramSource ParseShader(const std::string& filepath);
 
@@ -40,7 +41,6 @@ int main(void)
 #endif
 
 	// GLFW window creation
-	//---------------------
 	GLFWwindow* window = glfwCreateWindow(800, 600, "Learn OpenGL", NULL, NULL);
 	if (!window)
 	{
@@ -50,10 +50,10 @@ int main(void)
 	}
 
 	glfwMakeContextCurrent(window);
+	glfwSwapInterval(1);
 	glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
 	// glad: load all OpenGL function pointers
-	// ---------------------------------------
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		std::cout << "Failed to initialize GLAD" << std::endl;
@@ -61,10 +61,8 @@ int main(void)
 	}
 
 	// Build and compile our shader program
-	// ------------------------------------
 	ShaderProgramSource sps = ParseShader("resources/shaders/Basic.shader");
-	std::cout << sps.FragmentSource << std::endl;
-	unsigned int shader = CreateShader(sps.VertexSource, sps.FragmentSource);
+	unsigned int shader = CreateShaderProgram(sps.VertexSource, sps.FragmentSource);
 
 	// Setup vertex data (and buffer(s)) and configure vertex attributes
 	float vertices[] = {
@@ -77,57 +75,55 @@ int main(void)
 		0, 1, 3,	// first triangle
 		1, 2, 3		// second triangle
 	};
-	unsigned int VBO, VAO, EBO;
 
-	// Bind the Vertex Array Object first, then bind and set vertex buffer(s)
-	// and the configure vertex attribute(s).
+	unsigned int VAO;
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
+	unsigned int VBO;
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	// Element Buffer Objects
-	// ----------------------
+	unsigned int EBO;
 	glGenBuffers(1, &EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	// Set vertex attributes pointer
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
 	// Note that this is allowed, the call to glVertexAttribPointer registered
 	// VBO as the vertex attribute's bound vertex buffer object so afterwards
 	// we can safely unbind
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify
 	// this VAO, but this rarely happens. Modifying other VAOs requires a call to
 	// glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when
 	// it's not directly necessary.
-	glBindVertexArray(0);
+	//glBindVertexArray(0);
 
 	// Uncomment this call to draw in wireframe polygons.
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+	glUseProgram(shader);
+
+	// Set fragment shader color via uniform
+	int location = glGetUniformLocation(shader, "u_Color");
+	assert(location != -1);
+	glUniform4f(location, 0.8f, 0.3f, 0.8f, 1.0f);
+
 	// Render loop
-	// -----------
 	while (!glfwWindowShouldClose(window)) {
 		/* Process Input */
 		processInput(window);
 
 		/* Render here */
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		// Draw our first object
-		glUseProgram(shader);
-		glBindVertexArray(VAO);
-		//glDrawArrays(GL_TRIANGLES, 0, 3);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0);
+		// Draw calls
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
 		/* Swap front and back buffers and poll for IO events (keys, mouse, ect) */
 		glfwSwapBuffers(window);
@@ -150,7 +146,6 @@ int main(void)
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 // GLFW: whenever the window size is changed (by OS or user) this callback executes
-// --------------------------------------------------------------------------------
 void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
 	// make sure the viewport matches the new window dimensions; note that width and
@@ -160,7 +155,6 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 
 // Process all input: query GLFW whether relevant keys are pressed/released
 // this frame and react accordingly
-// ------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -168,7 +162,7 @@ void processInput(GLFWwindow *window)
 		glfwSetWindowShouldClose(window, true);
 	}
 }
-static int CreateShader(const std::string& vertexShader, const std::string& fragmentShader)
+static int CreateShaderProgram(const std::string& vertexShader, const std::string& fragmentShader)
 {
 	unsigned int program = glCreateProgram();
 	unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
@@ -232,7 +226,6 @@ static ShaderProgramSource ParseShader(const std::string& filepath)
 	{
 		if (line.find("#shader") != std::string::npos)
 		{
-			std::cout << "here" << std::endl;
 			if (line.find("vertex") != std::string::npos)
 			{
 				type = ShaderType::VERTEX;
