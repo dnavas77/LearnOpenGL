@@ -1,36 +1,26 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
 #include <iostream>
+#include <fstream>
+#include <sstream>
+
+// structs
+struct ShaderProgramSource
+{
+	std::string VertexSource;
+	std::string FragmentSource;
+};
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 static int CreateShader(const std::string& vertexShader, const std::string& fragmentShader);
 static unsigned int CompileShader(unsigned int type, const std::string& source);
+static ShaderProgramSource ParseShader(const std::string& filepath);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-
-// shaders
-const char *fragmentShaderSource = R"FOO(
-	#version 460 core
-	out vec4 color;
-
-	void main()
-	{
-		color = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-	}
-)FOO";
-
-const char *vertexShaderSource = R"FOO(
-	#version 460 core
-	layout (location = 0) in vec3 aPos;
-
-	void main()
-	{
-		gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0f);
-	}
-)FOO";
 
 // main
 int main(void)
@@ -72,7 +62,9 @@ int main(void)
 
 	// Build and compile our shader program
 	// ------------------------------------
-	unsigned int shader = CreateShader(vertexShaderSource, fragmentShaderSource);
+	ShaderProgramSource sps = ParseShader("resources/shaders/Basic.shader");
+	std::cout << sps.FragmentSource << std::endl;
+	unsigned int shader = CreateShader(sps.VertexSource, sps.FragmentSource);
 
 	// Setup vertex data (and buffer(s)) and configure vertex attributes
 	float vertices[] = {
@@ -145,6 +137,7 @@ int main(void)
 	// Optional: deallocate all resources
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
+	glDeleteProgram(shader);
 
 	// Terminate GLFW (clears all GLFW allocated resources)
 	glfwTerminate();
@@ -222,4 +215,37 @@ static unsigned int CompileShader(unsigned int type, const std::string& source)
 	}
 
 	return id;
+}
+
+static ShaderProgramSource ParseShader(const std::string& filepath)
+{
+	std::ifstream stream(filepath);
+	enum class ShaderType
+	{
+		NONE = -1, VERTEX = 0, FRAGMENT = 1
+	};
+	
+	std::string line;
+	std::stringstream ss[2];
+	ShaderType type = ShaderType::NONE;
+	while (getline(stream, line))
+	{
+		if (line.find("#shader") != std::string::npos)
+		{
+			std::cout << "here" << std::endl;
+			if (line.find("vertex") != std::string::npos)
+			{
+				type = ShaderType::VERTEX;
+			}
+			else if (line.find("fragment") != std::string::npos)
+			{
+				type = ShaderType::FRAGMENT;
+			}
+		}
+		else
+		{
+			ss[(int)type] << line << '\n';
+		}
+	}
+	return { ss[0].str(), ss[1].str() };
 }
