@@ -8,6 +8,8 @@
 #include "Renderer.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "VertexArray.h"
+#include "VertexBufferLayout.h"
 
 // structs
 struct ShaderProgramSource
@@ -82,15 +84,14 @@ int main(void)
 			1, 2, 3		// second triangle
 		};
 
-		unsigned int VAO;
-		GLCall(glGenVertexArrays(1, &VAO));
-		GLCall(glBindVertexArray(VAO));
-
+		VertexArray va;
 		VertexBuffer vb(vertices, sizeof(vertices));
-		IndexBuffer ib(indices, 6);
 
-		GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0));
-		GLCall(glEnableVertexAttribArray(0));
+		VertexBufferLayout layout;
+		layout.Push<float>(3);
+		va.AddBuffer(vb, layout);
+
+		IndexBuffer ib(indices, 6);
 
 		// Uncomment this call to draw in wireframe polygons.
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -106,6 +107,8 @@ int main(void)
 			GLCall(glClear(GL_COLOR_BUFFER_BIT));
 
 			// Draw calls
+			va.Bind();
+			ib.Bind();
 			GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
 
 			/* Swap front and back buffers and poll for IO events (keys, mouse, ect) */
@@ -114,7 +117,6 @@ int main(void)
 		}
 
 		// Optional: deallocate all resources
-		GLCall(glDeleteVertexArrays(1, &VAO));
 		GLCall(glDeleteProgram(shader));
 	}
 
