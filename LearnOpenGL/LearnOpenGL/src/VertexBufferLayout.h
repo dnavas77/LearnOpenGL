@@ -27,10 +27,10 @@ class VertexBufferLayout
 private:
 	std::vector<VertexBufferElement> m_Elements;
 	unsigned int m_Stride;
+
 public:
 	VertexBufferLayout()
 		: m_Stride(0) {};
-
 
 	template<typename T>
 	void Push(unsigned int count)
