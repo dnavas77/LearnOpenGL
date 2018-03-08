@@ -70,10 +70,6 @@ int main(void)
 			0, 1, 3,	// first triangle
 			1, 2, 3		// second triangle
 		};
-
-		// Build and compile our shader program
-		Shader shader("resources/shaders/Basic.shader");
-
 		VertexArray va;
 		VertexBuffer vb(vertices, sizeof(vertices));
 
@@ -83,23 +79,18 @@ int main(void)
 
 		IndexBuffer ib(indices, 6);
 
-		// Uncomment this call to draw in wireframe polygons.
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		// Build and compile our shader program
+		Shader shader("resources/shaders/Basic.shader");
+		Renderer renderer;
 
-		// Render loop
 		while (!glfwWindowShouldClose(window)) {
 			// Process input
 			processInput(window);
 
-			GLCall(glClear(GL_COLOR_BUFFER_BIT));
-
-			// Bind buffers
-			va.Bind();
-			ib.Bind();
-			shader.Bind();
+			renderer.Clear();
 
 			// Draw calls
-			GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0));
+			renderer.Draw(va, ib, shader);
 
 			/* Swap front and back buffers and poll for IO events (keys, mouse, ect) */
 			glfwSwapBuffers(window);
@@ -112,10 +103,6 @@ int main(void)
 
 	return 0;
 }
-
-/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-/* FUNCTION IMPLEMENTATIONS	   */
-/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 // GLFW: whenever the window size is changed (by OS or user) this callback executes
 void framebufferSizeCallback(GLFWwindow* window, int width, int height)
