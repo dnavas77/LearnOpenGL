@@ -58,9 +58,6 @@ int main(void)
 
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
-	// Build and compile our shader program
-	Shader shader("resources/shaders/Basic.shader");
-
 	{
 		// Setup vertex data (and buffer(s)) and configure vertex attributes
 		float vertices[] = {
@@ -73,6 +70,9 @@ int main(void)
 			0, 1, 3,	// first triangle
 			1, 2, 3		// second triangle
 		};
+
+		// Build and compile our shader program
+		Shader shader("resources/shaders/Basic.shader");
 
 		VertexArray va;
 		VertexBuffer vb(vertices, sizeof(vertices));
