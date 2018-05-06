@@ -23,10 +23,7 @@ const unsigned int SCR_HEIGHT = 600;
 int main(void)
 {
 	/* Initialize the library */
-	if (!glfwInit())
-	{
-		return -1;
-	}
+	if (!glfwInit()) { return -1; }
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
@@ -37,10 +34,10 @@ int main(void)
 #endif
 
 	// GLFW window creation
-	GLFWwindow* window = glfwCreateWindow(800, 600, "Learn OpenGL", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Learn OpenGL", NULL, NULL);
 	if (!window)
 	{
-		std::cout << "Failed to create GLFW window" << std::endl;
+		std::cout << "Failed to create GLFW window\n";
 		glfwTerminate();
 		return -1;
 	}
@@ -52,11 +49,11 @@ int main(void)
 	// glad: load all OpenGL function pointers
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
-		std::cout << "Failed to initialize GLAD" << std::endl;
+		std::cout << "Failed to initialize GLAD\n";
 		return -1;
 	}
 
-	std::cout << glGetString(GL_VERSION) << std::endl;
+	std::cout << glGetString(GL_VERSION) << "\n";
 
 	{
 		// Setup vertex data (and buffer(s)) and configure vertex attributes
