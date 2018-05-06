@@ -1,2 +1,2 @@
-# learnopengl-com
-Source code for learnopengl.com tutorial
+# Learn OpenGL
+Source code for various projects while learning OpenGL.
