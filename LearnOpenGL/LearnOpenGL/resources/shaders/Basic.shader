@@ -1,20 +1,29 @@
-#SHADER FRAGMENT 
+#SHADER VERTEX
 #version 460 core
-out vec4 color;
 
-//uniform vec4 u_Color;
+layout(location = 0) in vec4 position;
+layout(location = 1) in vec2 texCoord;
+
+out vec2 v_TexCoord;
 
 void main()
 {
-	color = vec4(0.8f, 0.3f, 0.8f, 1.0f);
+	gl_Position = position;
+	v_TexCoord = texCoord;
 }
 
 
-#SHADER VERTEX
+#SHADER FRAGMENT
 #version 460 core
-layout (location = 0) in vec3 aPos;
+
+layout(location = 0) out vec4 color;
+
+in vec2 v_TexCoord;
+
+uniform sampler2D u_Texture;
 
 void main()
 {
-	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0f);
+	vec4 texColor = texture(u_Texture, v_TexCoord);
+	color = texColor;
 }

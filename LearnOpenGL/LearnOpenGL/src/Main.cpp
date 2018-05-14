@@ -11,6 +11,7 @@
 #include "VertexArray.h"
 #include "VertexBufferLayout.h"
 #include "Shader.h"
+#include "Texture.h"
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -58,27 +59,40 @@ int main(void)
 	{
 		// Setup vertex data (and buffer(s)) and configure vertex attributes
 		float vertices[] = {
-			 0.5f,  0.5f, 0.0f,  // top right
-			 0.5f, -0.5f, 0.0f,  // bottom right
-			-0.5f, -0.5f, 0.0f,  // bottom left
-			-0.5f,  0.5f, 0.0f   // top left 
+			 0.5f,  0.5f, 0.0f, 1.0f, 1.0f, // top right
+			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
+			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
+		   - 0.5f,  0.5f, 0.0f, 0.0f, 1.0f  // top left 
 		};
 		unsigned int indices[] = {
-			0, 1, 3,	// first triangle
-			1, 2, 3		// second triangle
+			0, 1, 3, // first triangle
+			1, 2, 3	 // second triangle
 		};
+
+		// Setup GL Blending
+		GLCall(glEnable(GL_BLEND));
+		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
+		// Set up array buffer and vertex buffer
 		VertexArray va;
 		VertexBuffer vb(vertices, sizeof(vertices));
 
 		VertexBufferLayout layout;
 		layout.Push<float>(3);
+		layout.Push<float>(2);
 		va.AddBuffer(vb, layout);
 
 		IndexBuffer ib(indices, 6);
 
 		// Build and compile our shader program
 		Shader shader("resources/shaders/Basic.shader");
+		shader.Bind();
 		Renderer renderer;
+
+		// Texture stuff
+		Texture texture("resources/textures/shield.png");
+		texture.Bind();
+		shader.SetUniform1i("u_Texture", 0);
 
 		while (!glfwWindowShouldClose(window)) {
 			// Process input
