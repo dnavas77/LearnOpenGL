@@ -62,10 +62,10 @@ int main(void)
 	{
 		// Setup vertex data (and buffer(s)) and configure vertex attributes
 		float vertices[] = {
-			 0.5f,  0.5f, 0.0f, 1.0f, 1.0f, // top right
-			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // bottom right
-			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
-		   - 0.5f,  0.5f, 0.0f, 0.0f, 1.0f  // top left 
+			400.0f, 400.0f, 0.0f, 1.0f, 1.0f, // top right
+			400.0f, 100.0f, 0.0f, 1.0f, 0.0f, // bottom right
+			100.0f, 100.0f, 0.0f, 0.0f, 0.0f, // bottom left
+			100.0f, 400.0f, 0.0f, 0.0f, 1.0f  // top left 
 		};
 		unsigned int indices[] = {
 			0, 1, 3, // first triangle
@@ -81,17 +81,19 @@ int main(void)
 		VertexBuffer vb(vertices, sizeof(vertices));
 
 		VertexBufferLayout layout;
-		layout.Push<float>(3);
-		layout.Push<float>(2);
+		layout.Push<float>(3); // positions
+		layout.Push<float>(2); // texture coords
 		va.AddBuffer(vb, layout);
 
 		IndexBuffer ib(indices, 6);
 
 		// Math stuff
-		glm::mat4 proj = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, -1.0f, 1.0f);
-		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
-		//glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(2, 2, 0));
+		glm::mat4 proj = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, -1.0f, 1.0f);
+		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(-50, 0, 0));
 		glm::mat4 mvp = proj * view;
+
+		glm::vec4 vp(100.0f, 100.0f, 0.0f, 1.0f);
+		glm::vec4 result = proj * vp;
 
 		// Build and compile our shader program
 		Shader shader("resources/shaders/Basic.shader");
