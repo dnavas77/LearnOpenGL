@@ -16,6 +16,9 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw_gl3.h"
+
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 
@@ -90,10 +93,6 @@ int main(void)
 		// Math stuff
 		glm::mat4 proj = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, -1.0f, 1.0f);
 		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(-50, 0, 0));
-		glm::mat4 mvp = proj * view;
-
-		glm::vec4 vp(100.0f, 100.0f, 0.0f, 1.0f);
-		glm::vec4 result = proj * vp;
 
 		// Build and compile our shader program
 		Shader shader("resources/shaders/Basic.shader");
@@ -104,16 +103,41 @@ int main(void)
 		Texture texture("resources/textures/shield.png");
 		texture.Bind();
 		shader.SetUniform1i("u_Texture", 0);
-		shader.SetUniformMat4f("u_MVP", mvp);
+
+		// imgui
+		ImGui::CreateContext();
+		ImGui_ImplGlfwGL3_Init(window, true);
+		ImGui::StyleColorsDark();
+
+		// variables used in main loop
+		glm::vec3 translation(0, 10, 0);
 
 		while (!glfwWindowShouldClose(window)) {
+			renderer.Clear();
+
+			// imgui
+			ImGui_ImplGlfwGL3_NewFrame();
+
+			// translations
+			glm::mat4 model = glm::translate(glm::mat4(1.0f), translation);
+			glm::mat4 mvp = proj * view * model;
+			shader.SetUniformMat4f("u_MVP", mvp);
+
 			// Process input
 			processInput(window);
 
-			renderer.Clear();
-
 			// Draw calls
 			renderer.Draw(va, ib, shader);
+
+			// imgui window
+			{
+				ImGui::SliderFloat3("translation", &translation.x, 0.0f, 700.0f);
+				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			}
+
+			// imgui render
+			ImGui::Render();
+			ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
 			/* Swap front and back buffers and poll for IO events (keys, mouse, ect) */
 			glfwSwapBuffers(window);
@@ -121,6 +145,9 @@ int main(void)
 		}
 	}
 
+	// Terminate imgui
+    ImGui_ImplGlfwGL3_Shutdown();
+    ImGui::DestroyContext();
 	// Terminate GLFW (clears all GLFW allocated resources)
 	glfwTerminate();
 
