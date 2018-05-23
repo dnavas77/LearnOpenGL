@@ -64,11 +64,21 @@ int main(void)
 
 	{
 		// Setup vertex data (and buffer(s)) and configure vertex attributes
+		/*
 		float vertices[] = {
-			400.0f, 400.0f, 0.0f, 1.0f, 1.0f, // top right
-			400.0f, 100.0f, 0.0f, 1.0f, 0.0f, // bottom right
-			100.0f, 100.0f, 0.0f, 0.0f, 0.0f, // bottom left
-			100.0f, 400.0f, 0.0f, 0.0f, 1.0f  // top left 
+			// positions			// textures
+			300.0f, 300.0f,	0.0f,	1.0f, 1.0f, // top right
+			300.0f, 100.0f, 0.0f,	1.0f, 0.0f, // bottom right
+			100.0f, 100.0f, 0.0f,	0.0f, 0.0f, // bottom left
+			100.0f, 300.0f, 0.0f,	0.0f, 1.0f  // top left 
+		};
+		*/
+		float vertices[] = {
+			// positions          // texture coords
+			0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
+			0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // bottom right
+			-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
+			-0.5f,  0.5f, 0.0f,   0.0f, 1.0f  // top left 
 		};
 		unsigned int indices[] = {
 			0, 1, 3, // first triangle
@@ -90,19 +100,27 @@ int main(void)
 
 		IndexBuffer ib(indices, 6);
 
-		// Math stuff
-		glm::mat4 proj = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, -1.0f, 1.0f);
-		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(-50, 0, 0));
+		// Matrix stuff
+		//glm::mat4 proj = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f);
+		glm::mat4 model;
+		glm::mat4 view;
+		glm::mat4 projection;
+		projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/ (float)SCR_HEIGHT, 0.1f, 100.0f);
+		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+		model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+		glm::mat4 mvp = projection * view * model;
 
 		// Build and compile our shader program
+		Renderer renderer;
 		Shader shader("resources/shaders/Basic.shader");
 		shader.Bind();
-		Renderer renderer;
+		shader.SetUniform1i("u_Texture", 0);
+		shader.SetUniformMat4f("u_MVP", mvp);
 
 		// Texture stuff
-		Texture texture("resources/textures/shield.png");
+		Texture texture("resources/textures/fortnite.jpg");
 		texture.Bind();
-		shader.SetUniform1i("u_Texture", 0);
 
 		// imgui
 		ImGui::CreateContext();
@@ -110,18 +128,13 @@ int main(void)
 		ImGui::StyleColorsDark();
 
 		// variables used in main loop
-		glm::vec3 translation(0, 10, 0);
+		glm::vec3 translation(0.0f, 0.0f, 0.0f);
 
 		while (!glfwWindowShouldClose(window)) {
 			renderer.Clear();
 
 			// imgui
 			ImGui_ImplGlfwGL3_NewFrame();
-
-			// translations
-			glm::mat4 model = glm::translate(glm::mat4(1.0f), translation);
-			glm::mat4 mvp = proj * view * model;
-			shader.SetUniformMat4f("u_MVP", mvp);
 
 			// Process input
 			processInput(window);
