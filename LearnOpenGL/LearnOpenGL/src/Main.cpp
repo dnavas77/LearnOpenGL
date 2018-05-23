@@ -73,20 +73,71 @@ int main(void)
 			100.0f, 300.0f, 0.0f,	0.0f, 1.0f  // top left 
 		};
 		*/
+		/*
 		float vertices[] = {
-			// positions          // texture coords
-			0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
-			0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // bottom right
-			-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
-			-0.5f,  0.5f, 0.0f,   0.0f, 1.0f  // top left 
+			 // positions          // texture coords
+			 0.5f,  0.5f, 0.5f,   1.0f, 1.0f, // front top right
+			 0.5f, -0.5f, 0.5f,   1.0f, 0.0f, // front bottom right
+			-0.5f, -0.5f, 0.5f,   0.0f, 0.0f, // front bottom left
+			-0.5f,  0.5f, 0.5f,   0.0f, 1.0f, // front top left 
+
+			 0.5f,  0.5f, -0.5f,   1.0f, 1.0f, // back top right
+			 0.5f, -0.5f, -0.5f,   1.0f, 0.0f, // back bottom right
+			-0.5f, -0.5f, -0.5f,   0.0f, 0.0f, // back bottom left
+			-0.5f,  0.5f, -0.5f,   0.0f, 1.0f  // back top left 
+		};
+		*/
+		float vertices[] = {
+			-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+			0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+			0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+			0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+			-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+			-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+			0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+			0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+			0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+			-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+			-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+			-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+			-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+			0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+			0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+			0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+			0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+			0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+			0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+			0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+			0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+			0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+			-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+			-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+			-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+			0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+			0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+			0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+			-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+			-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 		};
 		unsigned int indices[] = {
 			0, 1, 3, // first triangle
-			1, 2, 3	 // second triangle
+			1, 2, 3  // second triangle
 		};
 
 		// Setup GL Blending
 		GLCall(glEnable(GL_BLEND));
+		GLCall(glEnable(GL_DEPTH_TEST));
 		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
 		// Set up array buffer and vertex buffer
@@ -98,25 +149,21 @@ int main(void)
 		layout.Push<float>(2); // texture coords
 		va.AddBuffer(vb, layout);
 
-		IndexBuffer ib(indices, 6);
+		//IndexBuffer ib(indices, 12);
 
 		// Matrix stuff
 		//glm::mat4 proj = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f);
 		glm::mat4 model;
 		glm::mat4 view;
 		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/ (float)SCR_HEIGHT, 0.1f, 100.0f);
+		projection = glm::perspective(45.0f, (float)SCR_WIDTH/ (float)SCR_HEIGHT, 0.1f, 100.0f);
 		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-		model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
-		glm::mat4 mvp = projection * view * model;
 
 		// Build and compile our shader program
 		Renderer renderer;
 		Shader shader("resources/shaders/Basic.shader");
 		shader.Bind();
 		shader.SetUniform1i("u_Texture", 0);
-		shader.SetUniformMat4f("u_MVP", mvp);
 
 		// Texture stuff
 		Texture texture("resources/textures/fortnite.jpg");
@@ -131,7 +178,15 @@ int main(void)
 		glm::vec3 translation(0.0f, 0.0f, 0.0f);
 
 		while (!glfwWindowShouldClose(window)) {
-			renderer.Clear();
+			glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			//renderer.Clear();
+
+			// Matrix stuff
+			model = glm::rotate(model, glm::radians(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			glm::mat4 mvp = projection * view * model;
+			shader.Bind();
+			shader.SetUniformMat4f("u_MVP", mvp);
 
 			// imgui
 			ImGui_ImplGlfwGL3_NewFrame();
@@ -140,7 +195,8 @@ int main(void)
 			processInput(window);
 
 			// Draw calls
-			renderer.Draw(va, ib, shader);
+			//renderer.Draw(va, ib, shader);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
 
 			// imgui window
 			{
