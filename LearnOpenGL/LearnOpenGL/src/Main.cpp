@@ -135,6 +135,20 @@ int main(void)
 			1, 2, 3  // second triangle
 		};
 
+		// More cubes positions
+		glm::vec3 cubePositions[] = {
+			glm::vec3(0.0f,  0.0f,  0.0f),
+			glm::vec3(2.0f,  5.0f, -15.0f),
+			glm::vec3(-1.5f, -2.2f, -2.5f),
+			glm::vec3(-3.8f, -2.0f, -12.3f),
+			glm::vec3(2.4f, -0.4f, -3.5f),
+			glm::vec3(-1.7f,  3.0f, -7.5f),
+			glm::vec3(1.3f, -2.0f, -2.5f),
+			glm::vec3(1.5f,  2.0f, -2.5f),
+			glm::vec3(1.5f,  0.2f, -1.5f),
+			glm::vec3(-1.3f,  1.0f, -1.5f)
+		};
+
 		// Setup GL Blending
 		GLCall(glEnable(GL_BLEND));
 		GLCall(glEnable(GL_DEPTH_TEST));
@@ -153,9 +167,9 @@ int main(void)
 
 		// Matrix stuff
 		//glm::mat4 proj = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f);
-		glm::mat4 model;
-		glm::mat4 view;
-		glm::mat4 projection;
+		glm::mat4 model(1.0f);
+		glm::mat4 view(1.0f);
+		glm::mat4 projection(1.0f);
 		projection = glm::perspective(45.0f, (float)SCR_WIDTH/ (float)SCR_HEIGHT, 0.1f, 100.0f);
 		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 
@@ -183,10 +197,7 @@ int main(void)
 			//renderer.Clear();
 
 			// Matrix stuff
-			model = glm::rotate(model, glm::radians(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			glm::mat4 mvp = projection * view * model;
-			shader.Bind();
-			shader.SetUniformMat4f("u_MVP", mvp);
+			//model = glm::rotate(model, glm::radians(0.2f), glm::vec3(0.5f, 1.0f, 0.0f));
 
 			// imgui
 			ImGui_ImplGlfwGL3_NewFrame();
@@ -196,11 +207,25 @@ int main(void)
 
 			// Draw calls
 			//renderer.Draw(va, ib, shader);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+			//glDrawArrays(GL_TRIANGLES, 0, 36);
+			for (unsigned int i = 0; i < 10; i++)
+			{
+				glm::mat4 model(1.0f);
+				model = glm::translate(model, cubePositions[i]);
+				float angle = glfwGetTime() * 20.0f;
+				model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+
+				glm::mat4 mvp = projection * view * model;
+
+				shader.Bind();
+				shader.SetUniformMat4f("u_MVP", mvp);
+
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
 
 			// imgui window
 			{
-				ImGui::SliderFloat3("translation", &translation.x, 0.0f, 700.0f);
+				ImGui::SliderFloat3("translation", &translation.x, 0.0f, 100.0f);
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			}
 
